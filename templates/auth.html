@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Coach - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: var(--bg-dark); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .auth-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        .auth-logo {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 { margin-bottom: 10px; font-weight: 700; }
+        p { color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem; }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+
+        .password-field-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
+
+        .toggle-password-btn {
+            position: absolute;
+            right: 15px;
+            top: 25px; /* Centered relative to the input */
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .btn-auth {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .toggle-link { margin-top: 25px; font-size: 0.9rem; color: var(--text-muted); }
+        .toggle-link a { color: var(--primary-custom); text-decoration: none; font-weight: 700; margin-left: 5px; }
+        .d-none { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <div class="auth-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
+        
+        <h2 id="auth-title">Welcome Back</h2>
+        <p id="auth-subtitle">Log in to continue your prep</p>
+
+        <form id="loginForm">
+            <input type="email" id="loginEmail" class="form-control-custom" placeholder="Email Address" required>
+            <div class="password-field-wrapper">
+                <input type="password" id="loginPassword" class="form-control-custom" placeholder="Password" required>
+                <i class="fa-solid fa-eye toggle-password-btn" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+            </div>
+            
+            <div style="text-align: right; margin-bottom: 15px;">
+                <a href="javascript:void(0)" onclick="showForgotForm()" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">Forgot Password?</a>
+            </div>
+            <button type="submit" class="btn-auth">Sign In</button>
+        </form>
+
+        <form id="signupForm" class="d-none">
+            <input type="text" id="signupName" class="form-control-custom" placeholder="Full Name" required>
+            <input type="email" id="signupEmail" class="form-control-custom" placeholder="Email Address" required>
+            <div class="password-field-wrapper">
+                <input type="password" id="signupPassword" class="form-control-custom" placeholder="Create Password" required>
+                <i class="fa-solid fa-eye toggle-password-btn" onclick="togglePasswordVisibility('signupPassword', this)"></i>
+            </div>
+            <div class="mb-3" style="text-align: left; margin-bottom: 15px;">
+            <label class="form-label text-muted" style="font-size: 0.85rem; margin-bottom: 5px; display: block;">I am joining as...</label>
+                <select class="form-control-custom" id="signupRole" style="margin-bottom: 5px;">
+                    <option value="candidate">Candidate (Prepare for Interview)</option>
+                    <option value="hirer">Hirer (Screen Candidates)</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-auth">Create Account</button>
+        </form>
+
+        <form id="forgotForm" class="d-none">
+            <p>Enter your email to receive a reset link.</p>
+            <input type="email" id="forgotEmail" class="form-control-custom" placeholder="Email Address" required>
+            <button type="submit" class="btn-auth">Send Reset Link</button>
+        </form>
+
+        <div class="toggle-link" id="toggle-container">
+            Don't have an account? <a href="javascript:void(0)" onclick="toggleAuth()">Sign Up</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            updateProfile,
+            sendPasswordResetEmail 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmzuqvzGqslOqb8tiO2a-Yvysqvgz6LAM",
+            authDomain: "aicoach-bba0e.firebaseapp.com",
+            projectId: "aicoach-bba0e",
+            storageBucket: "aicoach-bba0e.firebasestorage.app",
+            messagingSenderId: "644388512378",
+            appId: "1:644388512378:web:5c6b6bb16f869e2f0751c3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- UI Logic ---
+        window.togglePasswordVisibility = function(fieldId, icon) {
+            const field = document.getElementById(fieldId);
+            const isPassword = field.type === 'password';
+            field.type = isPassword ? 'text' : 'password';
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        };
+
+        window.toggleAuth = function() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const forgotForm = document.getElementById('forgotForm');
+            const title = document.getElementById('auth-title');
+            const subtitle = document.getElementById('auth-subtitle');
+            const toggleContainer = document.getElementById('toggle-container');
+
+            // Reset view to either Login or Signup
+            forgotForm.classList.add('d-none');
+            const isShowingLogin = loginForm.classList.contains('d-none');
+
+            if (isShowingLogin) {
+                loginForm.classList.remove('d-none');
+                signupForm.classList.add('d-none');
+                title.innerText = "Welcome Back";
+                subtitle.innerText = "Log in to continue your prep";
+                toggleContainer.innerHTML = 'Don\'t have an account? <a href="javascript:void(0)" onclick="toggleAuth()">Sign Up</a>';
+            } else {
+                loginForm.classList.add('d-none');
+                signupForm.classList.remove('d-none');
+                title.innerText = "Join AI Coach";
+                subtitle.innerText = "Start your interview journey";
+                toggleContainer.innerHTML = 'Already have an account? <a href="javascript:void(0)" onclick="toggleAuth()">Sign In</a>';
+            }
+        };
+
+        window.showForgotForm = function() {
+            document.getElementById('loginForm').classList.add('d-none');
+            document.getElementById('signupForm').classList.add('d-none');
+            document.getElementById('forgotForm').classList.remove('d-none');
+            document.getElementById('auth-title').innerText = "Reset Password";
+            document.getElementById('auth-subtitle').innerText = "We'll send a link to your email";
+            document.getElementById('toggle-container').innerHTML = '<a href="javascript:void(0)" onclick="toggleAuth()">Back to Login</a>';
+        };
+
+        // --- Authentication Actions ---
+        async function syncSessionWithFlask(user, role) {
+            const idToken = await user.getIdToken();
+            await fetch('/set_session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    uid: user.uid, 
+                    displayName: user.displayName, 
+                    email: user.email,
+                    role: role // Added this line
+                })
+            });
+            window.location.href = "/dashboard";
+        }
+
+        document.getElementById('loginForm').onsubmit = async (e) => {
+           e.preventDefault();
+           const email = document.getElementById('loginEmail').value; 
+           const password = document.getElementById('loginPassword').value;
+           const role = document.getElementById('loginRole').value; // Get role
+           try {
+               const res = await signInWithEmailAndPassword(auth, email, password);
+               await syncSessionWithFlask(res.user, role); // Pass role
+           } catch (err) { alert("Login failed: " + err.message); }
+        };
+
+        document.getElementById('signupForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value; 
+            const password = document.getElementById('signupPassword').value;
+            const role = document.getElementById('signupRole').value; // Get role
+            try {
+                const res = await createUserWithEmailAndPassword(auth, email, password);
+                await updateProfile(res.user, { displayName: name });
+                // Save role to Firestore for future reference
+                await setDoc(doc(db, "users", res.user.uid), { 
+                    fullName: name, 
+                    email, 
+                    role, // Added role to database
+                    createdAt: new Date() 
+                });
+                await syncSessionWithFlask(res.user, role); // Pass role
+            } catch (err) { alert("Signup Error: " + err.message); }
+        };
+
+        document.getElementById('forgotForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("Password reset email sent! Check your inbox.");
+                toggleAuth(); 
+            } catch (err) { alert("Error: " + err.message); }
+        };
+    </script>
+</body>
+</html>

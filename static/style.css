@@ -1,0 +1,265 @@
+:root {
+    --bg-dark: #0f172a;
+    --sidebar-bg: #1e293b;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --input-bg: #0f172a;
+    --primary-custom: #6366f1;
+}
+
+body, html {
+    margin: 0; padding: 0; height: 100%;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.app-wrapper { display: flex; min-height: 100vh; }
+
+/* --- Updated Sidebar Layout --- */
+.sidebar {
+    width: 320px; 
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--glass-border);
+    transition: all 0.4s ease;
+    display: flex;
+    flex-direction: column; /* Allows dividing top and scrollable middle */
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+/* style.css - Add/Update these rules */
+.sidebar.collapsed { 
+    width: 0; 
+    opacity: 0; 
+    padding: 0;
+    margin: 0;
+    border: none;
+    overflow: hidden; 
+}
+
+/* Ensure the main content takes up the full width when sidebar is gone */
+.sidebar.collapsed + .content-main {
+    width: 100%;
+}
+
+/* Fixed Header Section */
+.brand-account-header {
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+/* Scrollable Form Section */
+.sidebar-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border) transparent;
+}
+
+.sidebar-content::-webkit-scrollbar {
+    width: 5px;
+}
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 10px;
+}
+
+/* --- Account Component Styling --- */
+.account-badge {
+    border: 1px solid var(--glass-border);
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.user-avatar-circle {
+    background: var(--glass-bg);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+}
+
+.sidebar-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+/* --- Buttons & UI Elements --- */
+.btn-primary-custom {
+    background: var(--primary-gradient) !important;
+    border: none !important; color: white !important;
+    font-weight: 700 !important; text-transform: uppercase;
+    padding: 12px 25px; border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    transition: transform 0.2s;
+}
+
+.btn-primary-custom:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+.btn-outline-danger {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+
+.btn-sm {
+    font-size: 0.75rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Content Area --- */
+.content-main {
+    flex-grow: 1; padding: 40px;
+    display: flex; flex-direction: column; gap: 20px;
+}
+
+.mode-selector {
+    background: var(--glass-bg); backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    padding: 12px 24px; border-radius: 15px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+
+.glass-card {
+    background: var(--glass-bg); backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px; padding: 30px; min-height: 400px;
+}
+
+.btn-capsule-close {
+    background-color: #ff3b3b; color: white !important; border: none;
+    font-weight: 800; padding: 10px 25px; border-radius: 50px;
+}
+
+#open-sidebar-btn {
+    position: fixed; top: 15px; left: 15px; z-index: 2000;
+    background: var(--primary-gradient); border: none;
+    padding: 8px 14px; border-radius: 8px; color: white;
+}
+
+/* --- Responsive Helpers --- */
+.d-none { display: none !important; }
+
+@media (max-width: 768px) {
+    .app-wrapper { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: relative; }
+    .content-main { padding: 20px; }
+    .mode-selector { flex-direction: column; gap: 15px; text-align: center; }
+}
+
+.auth-card .form-control:focus {
+    background-color: var(--input-bg) !important;
+    border-color: var(--primary-custom);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    outline: none;
+}
+.password-container {
+    position: relative;
+    width: 100%;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-120%); /* Adjusted for your 15px margin-bottom */
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.3s;
+    z-index: 10;
+}
+
+.toggle-password:hover {
+    color: var(--primary-custom);
+}
+/* Simple pulse animation */
+.thinking-dots::after {
+    content: ' .';
+    animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: ' .'; }
+    40% { content: ' . .'; }
+    60% { content: ' . . .'; }
+    80%, 100% { content: ''; }
+}
+
+.loading-spinner {
+    display: none; /* Hidden by default */
+    margin: 10px auto;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top: 3px solid var(--primary-custom);
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(3600deg); }
+}
+/* Add this to style.css for better history interactivity */
+.history-item {
+    transition: all 0.2s ease;
+    border: 1px solid var(--glass-border) !important;
+}
+
+.history-item:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    transform: translateX(4px);
+    border-color: var(--primary-custom) !important;
+}
+/* style.css */
+#loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    color: #007bff; /* Match your primary color */
+    border-width: 0.25em;
+    filter: drop-shadow(0 0 10px rgba(0, 123, 255, 0.5));
+}
+
+#status-message {
+    margin-top: 1.5rem;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    animation: pulseText 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseText {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
