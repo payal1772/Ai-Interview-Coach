@@ -20,12 +20,21 @@
         <div class="brand-account-header p-4 border-bottom border-secondary border-opacity-25">
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <div class="d-flex align-items-center">
-                    <i class="fa-solid fa-bolt-lightning text-primary-custom me-2 fs-4"></i>
-                    <h4 class="m-0 fw-bold text-light">AI Coach</h4>
+                    <div class="brand-mark me-3">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <div>
+                        <p class="eyebrow m-0">Interview Studio</p>
+                        <h4 class="m-0 fw-bold text-light">AI Coach</h4>
+                    </div>
                 </div>
                 <button type="button" class="sidebar-toggle" onclick="toggleSidebar()">
                     <i class="fa-solid fa-angles-left"></i>
                 </button>
+            </div>
+
+            <div class="hero-panel">
+                <p class="hero-kicker">Practice with context</p>
             </div>
 
             <div class="history-section mb-4">
@@ -37,25 +46,6 @@
                 </div>
             </div>
 
-            <div class="account-badge p-3 rounded-3 bg-dark bg-opacity-50">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="user-avatar-circle me-3">
-                        <i class="fa-solid fa-circle-user fs-2 text-primary-custom"></i>
-                    </div>
-                    <div class="overflow-hidden">
-                        <p class="small text-secondary mb-0">Active Account</p>
-                        <p class="fw-bold mb-0 text-truncate text-light">{{ user_name }}</p>
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="/logout" class="btn btn-sm btn-outline-danger flex-grow-1 fw-bold">
-                        <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
-                    </a>
-                    <a href="/switch-account" class="btn btn-sm btn-outline-light flex-grow-1 fw-bold">
-                        <i class="fa-solid fa-user-plus me-1"></i> Switch
-                    </a>
-                </div>
-            </div>
         </div>
         
         <div class="sidebar-content px-4 py-3">
@@ -115,29 +105,52 @@
     </aside>
 
     <main class="content-main">
+        <div class="top-account-actions">
+            <div class="top-account-user" title="{{ user_name }}">
+                <i class="fa-solid fa-circle-user"></i>
+                <span>{{ user_name }}</span>
+            </div>
+            <button type="button" onclick="logoutUser('/switch-account')" class="top-account-btn top-account-btn-muted">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Switch</span>
+            </button>
+            <button type="button" onclick="logoutUser('/logout')" class="top-account-btn top-account-btn-danger">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+
         <div class="mode-selector">
-            <div class="d-flex gap-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="mode" id="modeGen" checked onchange="switchMode('generator')">
-                    <label class="form-check-label text-light" for="modeGen">Question Generator</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="mode" id="modeVoice" onchange="switchMode('voice')">
-                    <label class="form-check-label text-light" for="modeVoice">Voice Interview</label>
-                </div>
+            <div class="mode-nav-wrap">
+                <p class="mode-label mb-2">Workspace</p>
+                <nav class="mode-navbar" aria-label="Workspace sections">
+                    <button type="button" class="mode-nav-link active" data-mode="generator" onclick="switchMode('generator')">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Question Generator
+                    </button>
+                    <button type="button" class="mode-nav-link" data-mode="voice" onclick="switchMode('voice')">
+                        <i class="fa-solid fa-microphone-lines me-2"></i>Voice Interview
+                    </button>
+                    <button type="button" class="mode-nav-link" data-mode="coding" onclick="switchMode('coding')">
+                        <i class="fa-solid fa-code me-2"></i>Coding Round
+                    </button>
+                </nav>
             </div>
             <button class="btn-capsule-close" onclick="exitModes()">CLOSE</button>
         </div>
 
         <div id="section-generator">
             <div class="header-section mb-4">
-                <h2 class="fw-bold text-light">Interview Question Generator</h2>
-                <p class="text-secondary">Tailored insights powered by Gemini AI</p>
+                <p class="section-kicker">Question Generator</p>
+                <h2 class="fw-bold text-light">Build a mock interview set in a few clicks</h2>
+                <p class="text-secondary section-copy">Use your resume and job description to generate targeted questions with strong example answers.</p>
             </div>
             <div id="result-container" class="glass-card">
-                <div id="placeholder" class="text-center py-5">
-                    <i class="fa-solid fa-robot fa-3x mb-3 opacity-25"></i>
-                    <h5 class="text-muted">Results will appear here...</h5>
+                <div id="placeholder" class="empty-state text-center py-5">
+                    <div class="empty-state-icon">
+                        <i class="fa-solid fa-sparkles"></i>
+                    </div>
+                    <h4 class="empty-state-title">Results will appear here...</h4>
+                    <p class="empty-state-copy">Choose a role, upload a resume, and add the job description to generate a polished practice set.</p>
                 </div>
             
                 <div id="loading" class="text-center py-5 d-none">
@@ -151,8 +164,9 @@
 
         <div id="section-voice" class="d-none">
             <div class="header-section mb-4">
-                <h2 class="fw-bold text-light"><i class="fa-solid fa-microphone me-2"></i>Voice Mock Interview</h2>
-                <p class="text-secondary">Simulate a real-time conversation</p>
+                <p class="section-kicker">Voice Interview</p>
+                <h2 class="fw-bold text-light"><i class="fa-solid fa-microphone-lines me-2"></i>Start the practice flow with the voice round</h2>
+                <p class="text-secondary section-copy">Answer each generated question by typing or using your microphone. After this section, continue into the coding round for one combined performance review.</p>
             </div>
 
             <div id="voice-interface-card" class="glass-card text-center">
@@ -166,6 +180,7 @@
                         <input type="text" id="user-text-answer" class="form-control" placeholder="Type your answer...">
                         <button class="btn btn-primary-custom" type="button" onclick="submitAnswer()">Submit</button>
                     </div>
+                    <button class="btn btn-outline-light" type="button" onclick="skipVoiceQuestion()">Skip Question</button>
                 </div>
                 
                 <div class="d-flex justify-content-center gap-3">
@@ -173,58 +188,110 @@
                     <button id="stop-voice-btn" class="btn btn-outline-danger d-none" onclick="stopInterview()">End Interview</button>
                 </div>
             </div>
+        </div>
 
-            <div id="performance-dashboard" class="d-none mt-4">
-                <div class="glass-card p-4">
-                    <h3 class="text-light mb-4 text-center">Interview Performance Analytics</h3>
-                    
-                    <div class="row mb-5 text-center">
-                        <div class="col-md-4 mb-3">
-                            <p class="small text-uppercase text-secondary mb-1">Technical</p>
-                            <div class="progress bg-dark mb-2" style="height: 10px;">
-                                <div id="bar-tech" class="progress-bar bg-primary-custom" style="width: 0%"></div>
+        <div id="section-coding" class="d-none">
+            <div class="header-section mb-4">
+                <p class="section-kicker">Coding Round</p>
+                <h2 class="fw-bold text-light"><i class="fa-solid fa-code me-2"></i>Finish the practice flow with the coding round</h2>
+                <p class="text-secondary section-copy">Use the editor, run your solution, and then generate one combined dashboard covering both your spoken answers and coding performance.</p>
+            </div>
+
+            <div class="glass-card coding-workspace">
+                <div class="coding-workspace-header">
+                    <div>
+                        <p class="section-kicker">Coding Workspace</p>
+                        <h3 class="text-light mb-2">Attempt and run coding questions separately</h3>
+                        <p class="section-copy mb-0">This tab stays focused on coding only, while the other tabs handle interview generation and spoken practice.</p>
+                    </div>
+                    <div id="coding-challenge-picker" class="coding-challenge-picker d-none">
+                        <label for="coding-select" class="form-label small text-uppercase fw-bold text-secondary mb-2">Challenge</label>
+                        <select id="coding-select" class="form-select"></select>
+                    </div>
+                </div>
+
+                <div id="coding-empty" class="empty-state compact-empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <h4 class="empty-state-title">No coding round generated yet</h4>
+                    <p class="empty-state-copy">Generate a technical interview set to populate this tab with a coding challenge.</p>
+                </div>
+
+                <div id="coding-content" class="d-none">
+                    <div class="coding-problem-card">
+                        <p id="coding-progress" class="mode-label mb-2"></p>
+                        <h4 id="coding-title" class="text-light mb-3"></h4>
+                        <p id="coding-prompt" class="coding-prompt"></p>
+                        <div id="coding-requirements" class="coding-requirements"></div>
+                        <div class="coding-example-grid">
+                            <div class="coding-example-box">
+                                <span class="coding-example-label">Example Input</span>
+                                <pre id="coding-example-input" class="coding-example-body"></pre>
                             </div>
-                            <span id="txt-tech" class="fw-bold text-primary-custom">0/10</span>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <p class="small text-uppercase text-secondary mb-1">Communication</p>
-                            <div class="progress bg-dark mb-2" style="height: 10px;">
-                                <div id="bar-comm" class="progress-bar bg-info" style="width: 0%"></div>
+                            <div class="coding-example-box">
+                                <span class="coding-example-label">Example Output</span>
+                                <pre id="coding-example-output" class="coding-example-body"></pre>
                             </div>
-                            <span id="txt-comm" class="fw-bold text-info">0/10</span>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <p class="small text-uppercase text-secondary mb-1">Confidence</p>
-                            <div class="progress bg-dark mb-2" style="height: 10px;">
-                                <div id="bar-conf" class="progress-bar bg-warning" style="width: 0%"></div>
-                            </div>
-                            <span id="txt-conf" class="fw-bold text-warning">0/10</span>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="p-3 rounded border border-success border-opacity-25 h-100" style="background: rgba(40, 167, 69, 0.05);">
-                                <h5 class="text-success small text-uppercase fw-bold"><i class="fa-solid fa-star me-2"></i>Key Strengths</h5>
-                                <div id="excel-content" class="text-light small mt-2"></div>
+                    <div class="row g-4 mt-1">
+                        <div class="col-lg-8">
+                            <div class="d-flex align-items-center justify-content-between mb-2 gap-3 flex-wrap">
+                                <label for="code-editor" id="code-editor-label" class="form-label small text-uppercase fw-bold text-secondary mb-0">Solution</label>
+                                <div class="language-picker">
+                                    <label for="language-select" class="form-label small text-uppercase fw-bold text-secondary mb-1 d-block">Language</label>
+                                    <select id="language-select" class="form-select"></select>
+                                </div>
                             </div>
+                            <textarea id="code-editor" class="form-control code-editor" spellcheck="false"></textarea>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="p-3 rounded border border-warning border-opacity-25 h-100" style="background: rgba(255, 193, 7, 0.05);">
-                                <h5 class="text-warning small text-uppercase fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Areas to Improve</h5>
-                                <div id="improve-content" class="text-light small mt-2"></div>
+                        <div class="col-lg-4">
+                            <label for="code-stdin" class="form-label small text-uppercase fw-bold text-secondary">Custom Input</label>
+                            <textarea id="code-stdin" class="form-control code-stdin" placeholder="Optional stdin for your program"></textarea>
+                            <button type="button" id="run-code-btn" class="btn btn-primary-custom w-100 mt-3" onclick="runCodingChallenge()">
+                                <i class="fa-solid fa-play me-2"></i>Run Code
+                            </button>
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-light" onclick="nextCodingChallenge()">Next Question</button>
+                                <button type="button" class="btn btn-outline-light" onclick="skipCodingChallenge()">Skip Question</button>
                             </div>
                         </div>
                     </div>
 
-                    <button class="btn btn-outline-light w-100 mt-4" onclick="location.reload()">Start New Session</button>
+                    <div id="coding-feedback" class="coding-feedback-banner d-none mt-4"></div>
+
+                    <div id="coding-complete" class="coding-complete-panel d-none mt-4">
+                        <p class="section-kicker mb-2">Round Complete</p>
+                        <h4 class="text-light mb-3">Coding round complete</h4>
+                        <p id="coding-complete-message" class="section-copy mb-3"></p>
+                        <div class="coding-complete-card mb-3">
+                            <h5 class="text-light mb-2">Suggestion</h5>
+                            <p id="coding-complete-suggestion" class="mb-0"></p>
+                        </div>
+                    <div class="coding-complete-card">
+                        <h5 class="text-light mb-2">Correct Answer</h5>
+                        <pre id="coding-complete-answer" class="coding-example-body"></pre>
+                    </div>
+                    <button type="button" class="btn btn-primary-custom w-100 mt-4" onclick="completePracticeFlow()">
+                        <i class="fa-solid fa-chart-column me-2"></i>View Performance Dashboard
+                    </button>
+                </div>
+
+                    <div class="code-output-panel mt-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h5 class="text-light m-0">Execution Output</h5>
+                            <span id="code-status-badge" class="code-status-badge">Idle</span>
+                        </div>
+                        <pre id="code-output" class="code-output">Run your solution to see stdout and stderr here.</pre>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
 
 <script>
@@ -233,6 +300,15 @@
         const openBtn = document.getElementById('open-sidebar-btn');
         sidebar.classList.toggle('collapsed');
         openBtn.style.display = sidebar.classList.contains('collapsed') ? 'block' : 'none';
+    }
+
+    function collapseSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const openBtn = document.getElementById('open-sidebar-btn');
+        if (!sidebar.classList.contains('collapsed')) {
+            sidebar.classList.add('collapsed');
+        }
+        openBtn.style.display = 'block';
     }
 </script>
 </body>

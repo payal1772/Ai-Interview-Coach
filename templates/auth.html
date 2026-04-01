@@ -134,6 +134,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, 
+            setPersistence,
+            browserSessionPersistence,
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
             updateProfile,
@@ -201,7 +203,7 @@
 
         // --- Authentication Actions ---
         async function syncSessionWithFlask(user, role) {
-            const idToken = await user.getIdToken();
+            await user.getIdToken();
             await fetch('/set_session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -219,10 +221,10 @@
            e.preventDefault();
            const email = document.getElementById('loginEmail').value; 
            const password = document.getElementById('loginPassword').value;
-           const role = document.getElementById('loginRole').value; // Get role
            try {
+               await setPersistence(auth, browserSessionPersistence);
                const res = await signInWithEmailAndPassword(auth, email, password);
-               await syncSessionWithFlask(res.user, role); // Pass role
+               await syncSessionWithFlask(res.user, null);
            } catch (err) { alert("Login failed: " + err.message); }
         };
 
@@ -233,6 +235,7 @@
             const password = document.getElementById('signupPassword').value;
             const role = document.getElementById('signupRole').value; // Get role
             try {
+                await setPersistence(auth, browserSessionPersistence);
                 const res = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(res.user, { displayName: name });
                 // Save role to Firestore for future reference

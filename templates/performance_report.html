@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Coach | Performance Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='performance_report.css') }}">
+</head>
+<body>
+    <main class="report-shell">
+        <section class="report-hero">
+            <div>
+                <p class="report-kicker">Combined Practice Review</p>
+                <h1 id="report-title">Performance Dashboard</h1>
+                <p id="report-summary" class="report-summary">Loading your combined voice interview and coding report...</p>
+            </div>
+            <div class="report-actions">
+                <span class="report-user">{{ user_name }}</span>
+                <a href="/dashboard" class="report-btn report-btn-secondary">Back To Dashboard</a>
+                <a href="/logout" class="report-btn report-btn-primary">Logout</a>
+            </div>
+        </section>
+
+        <section class="report-overview-grid">
+            <article class="report-stat-card accent-overall">
+                <p class="report-stat-label">Overall Score</p>
+                <h2 id="overall-score">0.0</h2>
+                <p>Combined readiness across voice interview and coding.</p>
+            </article>
+            <article class="report-stat-card">
+                <p class="report-stat-label">Voice Questions Answered</p>
+                <h2 id="voice-summary">0 / 0</h2>
+                <p>How much of the spoken interview you completed.</p>
+            </article>
+            <article class="report-stat-card">
+                <p class="report-stat-label">Coding Challenges Solved</p>
+                <h2 id="coding-summary">0 / 0</h2>
+                <p>Accepted coding submissions in the practice flow.</p>
+            </article>
+            <article class="report-stat-card">
+                <p class="report-stat-label">Coding Test Pass Rate</p>
+                <h2 id="coding-pass-ratio">0%</h2>
+                <p>Backend test performance from the coding round.</p>
+            </article>
+        </section>
+
+        <section class="report-chart-grid">
+            <article class="report-panel chart-panel wide-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="report-kicker">Bar Chart</p>
+                        <h3>Score Breakdown</h3>
+                    </div>
+                </div>
+                <canvas id="scoreBarChart"></canvas>
+            </article>
+
+            <article class="report-panel chart-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="report-kicker">Doughnut Chart</p>
+                        <h3>Practice Completion</h3>
+                    </div>
+                </div>
+                <canvas id="practicePieChart"></canvas>
+            </article>
+
+            <article class="report-panel chart-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="report-kicker">Radar Chart</p>
+                        <h3>Capability Shape</h3>
+                    </div>
+                </div>
+                <canvas id="scoreRadarChart"></canvas>
+            </article>
+
+            <article class="report-panel chart-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="report-kicker">Polar Area</p>
+                        <h3>Readiness Balance</h3>
+                    </div>
+                </div>
+                <canvas id="scorePolarChart"></canvas>
+            </article>
+        </section>
+
+        <section class="report-insight-grid">
+            <article class="report-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="report-kicker">Strengths</p>
+                        <h3>What Went Well</h3>
+                    </div>
+                </div>
+                <ul id="strength-list" class="report-list"></ul>
+            </article>
+
+            <article class="report-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="report-kicker">Improvements</p>
+                        <h3>Focus Areas</h3>
+                    </div>
+                </div>
+                <ul id="improvement-list" class="report-list"></ul>
+            </article>
+
+            <article class="report-panel wide-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="report-kicker">Suggestions</p>
+                        <h3>Next Practice Steps</h3>
+                    </div>
+                </div>
+                <div id="recommendation-list" class="recommendation-stack"></div>
+            </article>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="{{ url_for('static', filename='performance_report.js') }}"></script>
+</body>
+</html>
