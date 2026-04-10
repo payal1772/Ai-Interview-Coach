@@ -38,7 +38,10 @@ const state = {
     transcript: [],
     voiceCompleted: false,
     isRecording: false,
+
     preferredVoice: null,
+=======
+
     reportsById: {},
     activeCodingIdx: 0,
     activeLanguage: 'python',
