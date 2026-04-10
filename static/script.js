@@ -40,7 +40,7 @@ const state = {
     isRecording: false,
 
     preferredVoice: null,
-=======
+
 
     reportsById: {},
     activeCodingIdx: 0,
