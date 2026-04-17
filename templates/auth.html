@@ -196,6 +196,24 @@
         };
 
         // --- Authentication Actions ---
+        function normalizedEmail(fieldId) {
+            return document.getElementById(fieldId).value.trim().toLowerCase();
+        }
+
+        function authErrorMessage(error, fallbackPrefix = 'Authentication error') {
+            const messages = {
+                'auth/email-already-in-use': 'This email is already registered. Please sign in, verify your email, or use Forgot Password.',
+                'auth/invalid-email': 'Please enter a valid email address.',
+                'auth/invalid-credential': 'Email or password is incorrect.',
+                'auth/user-not-found': 'No account was found for this email. Please sign up first.',
+                'auth/wrong-password': 'Email or password is incorrect.',
+                'auth/weak-password': 'Password should be at least 6 characters.',
+                'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.'
+            };
+
+            return messages[error.code] || `${fallbackPrefix}: ${error.message}`;
+        }
+
         async function syncSessionWithFlask(user) {
             const idToken = await user.getIdToken(true);
             const response = await fetch('/set_session', {
@@ -219,7 +237,7 @@
 
         document.getElementById('loginForm').onsubmit = async (e) => {
            e.preventDefault();
-           const email = document.getElementById('loginEmail').value; 
+           const email = normalizedEmail('loginEmail'); 
            const password = document.getElementById('loginPassword').value;
            try {
                await setPersistence(auth, browserSessionPersistence);
@@ -233,13 +251,13 @@
                    return;
                }
                await syncSessionWithFlask(res.user);
-           } catch (err) { alert("Login failed: " + err.message); }
+           } catch (err) { alert(authErrorMessage(err, 'Login failed')); }
         };
 
         document.getElementById('signupForm').onsubmit = async (e) => {
             e.preventDefault();
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value; 
+            const name = document.getElementById('signupName').value.trim();
+            const email = normalizedEmail('signupEmail'); 
             const password = document.getElementById('signupPassword').value;
             try {
                 await setPersistence(auth, browserSessionPersistence);
@@ -254,17 +272,17 @@
                 await signOut(auth);
                 alert('A verification email has been sent. Please verify your email before signing in.');
                 toggleAuth();
-            } catch (err) { alert("Signup Error: " + err.message); }
+            } catch (err) { alert(authErrorMessage(err, 'Signup error')); }
         };
 
         document.getElementById('forgotForm').onsubmit = async (e) => {
             e.preventDefault();
-            const email = document.getElementById('forgotEmail').value;
+            const email = normalizedEmail('forgotEmail');
             try {
                 await sendPasswordResetEmail(auth, email);
                 alert("Password reset email sent! Check your inbox.");
                 toggleAuth(); 
-            } catch (err) { alert("Error: " + err.message); }
+            } catch (err) { alert(authErrorMessage(err, 'Password reset error')); }
         };
     </script>
 </body>
