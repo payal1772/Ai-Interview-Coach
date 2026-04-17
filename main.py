@@ -64,12 +64,17 @@ def build_firebase_credential():
     project_id = service_account_info.get("project_id", "unknown project")
     client_email = service_account_info.get("client_email", "unknown client")
     source_name = "FIREBASE_SERVICE_ACCOUNT_BASE64" if service_account_base64 else "FIREBASE_SERVICE_ACCOUNT_JSON"
-    print(f"Firebase service account loaded from {source_name}: project_id={project_id}, client_email={client_email}")
+    print(
+        f"Firebase service account loaded from {source_name}: "
+        f"project_id={project_id}, client_email={client_email}",
+        flush=True
+    )
     return credentials.Certificate(service_account_info)
 
 
 # Firebase Admin verifies ID tokens and blocks unverified emails on the server.
 FIREBASE_ADMIN_AVAILABLE = False
+FIREBASE_ADMIN_STATUS = "Firebase Admin was not initialized."
 try:
     import firebase_admin
     from firebase_admin import auth as firebase_auth, credentials
@@ -78,13 +83,20 @@ try:
         try:
             firebase_admin.initialize_app(firebase_credential)
             FIREBASE_ADMIN_AVAILABLE = True
-            print('Firebase admin initialized.')
+            FIREBASE_ADMIN_STATUS = "Firebase Admin initialized."
+            print(FIREBASE_ADMIN_STATUS, flush=True)
         except Exception as e:
-            print('Failed to initialize firebase_admin:', e)
+            FIREBASE_ADMIN_STATUS = f"Failed to initialize firebase_admin: {e}"
+            print(FIREBASE_ADMIN_STATUS, flush=True)
     else:
-        print('Firebase service account not set; firebase_admin integration disabled.')
+        FIREBASE_ADMIN_STATUS = (
+            "Firebase service account not set. Set FIREBASE_SERVICE_ACCOUNT_BASE64 "
+            "or FIREBASE_SERVICE_ACCOUNT_JSON."
+        )
+        print(FIREBASE_ADMIN_STATUS, flush=True)
 except Exception as e:
-    print('firebase_admin not available:', e)
+    FIREBASE_ADMIN_STATUS = f"firebase_admin not available: {e}"
+    print(FIREBASE_ADMIN_STATUS, flush=True)
 
 # --- CONFIGURATION ---
 app.config.update(
@@ -895,7 +907,13 @@ def set_session():
     # Require server-side verification of Firebase ID token to ensure email is verified
     if not FIREBASE_ADMIN_AVAILABLE:
         if not ALLOW_UNVERIFIED_FIREBASE_SESSION:
-            return jsonify({"error": "Server is not configured to verify Firebase ID tokens. Configure FIREBASE_SERVICE_ACCOUNT_JSON on Render."}), 500
+            return jsonify({
+                "error": (
+                    "Server is not configured to verify Firebase ID tokens. "
+                    "Configure FIREBASE_SERVICE_ACCOUNT_BASE64 on Render and redeploy. "
+                    f"Startup status: {FIREBASE_ADMIN_STATUS}"
+                )
+            }), 500
 
         uid = data.get('uid')
         if not uid:
