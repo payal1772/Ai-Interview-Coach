@@ -111,6 +111,8 @@ Example:
 GOOGLE_API_KEY=your_gemini_api_key
 SECRET_KEY=your_flask_secret_key
 FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"..."}
+# Optional alternative:
+# FIREBASE_SERVICE_ACCOUNT_BASE64=base64_encoded_service_account_json
 ALLOW_UNVERIFIED_FIREBASE_SESSION=false
 SESSION_COOKIE_SECURE=true
 GEMINI_TIMEOUT_SECONDS=90
@@ -122,6 +124,7 @@ GEMINI_MAX_RETRIES=2
 - `GOOGLE_API_KEY`: required for Gemini API requests
 - `SECRET_KEY`: Flask session secret
 - `FIREBASE_SERVICE_ACCOUNT_JSON`: Firebase Admin service-account JSON used by Flask to verify login ID tokens and block unverified users
+- `FIREBASE_SERVICE_ACCOUNT_BASE64`: optional base64-encoded Firebase service-account JSON; useful if a host has trouble with raw multiline JSON
 - `FIREBASE_SERVICE_ACCOUNT`: optional local path to a Firebase service-account JSON file; use this instead of `FIREBASE_SERVICE_ACCOUNT_JSON` for local development if preferred
 - `ALLOW_UNVERIFIED_FIREBASE_SESSION`: set to `false` on Render so users cannot bypass Firebase Admin verification
 - `SESSION_COOKIE_SECURE`: set to `true` on Render so session cookies are sent only over HTTPS
@@ -138,7 +141,25 @@ Set these environment variables in Render:
 - `ALLOW_UNVERIFIED_FIREBASE_SESSION=false`
 - `SESSION_COOKIE_SECURE=true`
 
-To create `FIREBASE_SERVICE_ACCOUNT_JSON`, open Firebase Console, go to Project settings, Service accounts, generate a new private key, then paste the entire JSON content into Render as one environment variable. The app also accepts escaped `\n` characters in the private key.
+To create `FIREBASE_SERVICE_ACCOUNT_JSON`, open Firebase Console, go to Project settings, Service accounts, generate a new private key, then paste the entire JSON content into Render as one environment variable. The app also accepts escaped `\n` characters in the private key. Do not add extra quotes around the value in Render; the app trims accidental wrapping quotes, but the cleanest value starts with `{` and ends with `}`.
+
+If Render still fails to parse the raw JSON, use `FIREBASE_SERVICE_ACCOUNT_BASE64` instead:
+
+```powershell
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content .\serviceAccountKey.json -Raw)))
+```
+
+Set the output as `FIREBASE_SERVICE_ACCOUNT_BASE64` in Render, remove `FIREBASE_SERVICE_ACCOUNT_JSON`, then redeploy the service.
+
+After deployment, check the Render logs for one of these lines:
+
+```text
+Firebase service account loaded from FIREBASE_SERVICE_ACCOUNT_JSON: project_id=..., client_email=...
+Firebase service account loaded from FIREBASE_SERVICE_ACCOUNT_BASE64: project_id=..., client_email=...
+Firebase admin initialized.
+```
+
+If those lines do not appear, Render is not passing the Firebase credential to the running service.
 
 The production auth flow is:
 

@@ -1,6 +1,7 @@
 import os
 import mimetypes
 import json
+import base64
 import sys
 import ast
 import tempfile
@@ -21,21 +22,49 @@ mimetypes.add_type('application/javascript', '.js')
 
 app = Flask(__name__)
 
+def normalize_env_value(value):
+    """Trim common wrapping added by dashboards or shell snippets."""
+    cleaned = (value or '').strip().lstrip('\ufeff')
+    if len(cleaned) >= 2 and cleaned[0] == cleaned[-1] and cleaned[0] in {'"', "'"}:
+        cleaned = cleaned[1:-1].strip()
+    return cleaned
+
+
 def build_firebase_credential():
     """Load Firebase Admin credentials from a file path or JSON env var."""
-    service_account = (
-        os.getenv('FIREBASE_SERVICE_ACCOUNT')
-        or os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON')
-    )
-    if not service_account:
+    service_account_path = normalize_env_value(os.getenv('FIREBASE_SERVICE_ACCOUNT'))
+    service_account_json = normalize_env_value(os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON'))
+    service_account_base64 = normalize_env_value(os.getenv('FIREBASE_SERVICE_ACCOUNT_BASE64'))
+
+    if service_account_path:
+        if not os.path.exists(service_account_path):
+            raise RuntimeError(f"FIREBASE_SERVICE_ACCOUNT file does not exist: {service_account_path}")
+        print("Firebase service account loaded from FIREBASE_SERVICE_ACCOUNT file path.")
+        return credentials.Certificate(service_account_path)
+
+    if service_account_base64:
+        try:
+            service_account_json = normalize_env_value(
+                base64.b64decode(service_account_base64).decode("utf-8")
+            )
+        except Exception as e:
+            raise RuntimeError("FIREBASE_SERVICE_ACCOUNT_BASE64 is not valid base64 JSON.") from e
+
+    if not service_account_json:
         return None
 
-    if os.path.exists(service_account):
-        return credentials.Certificate(service_account)
+    try:
+        service_account_info = json.loads(service_account_json)
+    except json.JSONDecodeError as e:
+        source_name = "FIREBASE_SERVICE_ACCOUNT_BASE64" if service_account_base64 else "FIREBASE_SERVICE_ACCOUNT_JSON"
+        raise RuntimeError(f"{source_name} did not decode to valid Firebase service-account JSON.") from e
 
-    service_account_info = json.loads(service_account)
     if "private_key" in service_account_info:
         service_account_info["private_key"] = service_account_info["private_key"].replace("\\n", "\n")
+    project_id = service_account_info.get("project_id", "unknown project")
+    client_email = service_account_info.get("client_email", "unknown client")
+    source_name = "FIREBASE_SERVICE_ACCOUNT_BASE64" if service_account_base64 else "FIREBASE_SERVICE_ACCOUNT_JSON"
+    print(f"Firebase service account loaded from {source_name}: project_id={project_id}, client_email={client_email}")
     return credentials.Certificate(service_account_info)
 
 
