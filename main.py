@@ -21,6 +21,42 @@ mimetypes.add_type('application/javascript', '.js')
 
 app = Flask(__name__)
 
+def build_firebase_credential():
+    """Load Firebase Admin credentials from a file path or JSON env var."""
+    service_account = (
+        os.getenv('FIREBASE_SERVICE_ACCOUNT')
+        or os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON')
+    )
+    if not service_account:
+        return None
+
+    if os.path.exists(service_account):
+        return credentials.Certificate(service_account)
+
+    service_account_info = json.loads(service_account)
+    if "private_key" in service_account_info:
+        service_account_info["private_key"] = service_account_info["private_key"].replace("\\n", "\n")
+    return credentials.Certificate(service_account_info)
+
+
+# Firebase Admin verifies ID tokens and blocks unverified emails on the server.
+FIREBASE_ADMIN_AVAILABLE = False
+try:
+    import firebase_admin
+    from firebase_admin import auth as firebase_auth, credentials
+    firebase_credential = build_firebase_credential()
+    if firebase_credential:
+        try:
+            firebase_admin.initialize_app(firebase_credential)
+            FIREBASE_ADMIN_AVAILABLE = True
+            print('Firebase admin initialized.')
+        except Exception as e:
+            print('Failed to initialize firebase_admin:', e)
+    else:
+        print('Firebase service account not set; firebase_admin integration disabled.')
+except Exception as e:
+    print('firebase_admin not available:', e)
+
 # --- CONFIGURATION ---
 app.config.update(
     UPLOAD_FOLDER='uploads',
@@ -29,6 +65,7 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "false").lower() in {"1", "true", "yes"},
     MAX_CONTENT_LENGTH=5 * 1024 * 1024 
 )
 
@@ -37,6 +74,10 @@ GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
 GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_TIMEOUT_SECONDS = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "90"))
 GEMINI_MAX_RETRIES = int(os.getenv("GEMINI_MAX_RETRIES", "2"))
+ALLOW_UNVERIFIED_FIREBASE_SESSION = os.getenv(
+    "ALLOW_UNVERIFIED_FIREBASE_SESSION",
+    "true" if os.getenv("FLASK_ENV") == "development" else "false"
+).lower() in {"1", "true", "yes"}
 
 LANGUAGE_CONFIG = {
     "python": {
@@ -820,11 +861,46 @@ def auth_alias():
 
 @app.route('/set_session', methods=['POST'])
 def set_session():
-    data = request.json
+    data = request.json or {}
+    id_token = data.get('idToken') or data.get('id_token')
+    # Require server-side verification of Firebase ID token to ensure email is verified
+    if not FIREBASE_ADMIN_AVAILABLE:
+        if not ALLOW_UNVERIFIED_FIREBASE_SESSION:
+            return jsonify({"error": "Server is not configured to verify Firebase ID tokens. Configure FIREBASE_SERVICE_ACCOUNT_JSON on Render."}), 500
+
+        uid = data.get('uid')
+        if not uid:
+            return jsonify({"error": "Missing user id."}), 400
+
+        session.permanent = False
+        session['user_id'] = uid
+        session.pop('role', None)
+        session['user_name'] = data.get('displayName') or data.get('email') or "User"
+        return jsonify({
+            "status": "success",
+            "warning": "Firebase Admin verification is disabled for local development."
+        })
+
+    if not id_token:
+        return jsonify({"error": "Missing ID token."}), 400
+
+    try:
+        decoded = firebase_auth.verify_id_token(id_token)
+    except Exception as e:
+        return jsonify({"error": f"Invalid ID token: {e}"}), 401
+
+    uid = decoded.get('uid')
+    email_verified = decoded.get('email_verified', False)
+    if uid != data.get('uid'):
+        return jsonify({"error": "Token UID does not match provided UID."}), 401
+    if not email_verified:
+        return jsonify({"error": "Email address not verified."}), 403
+
+    # Passed verification — set session
     session.permanent = False
-    session['user_id'] = data.get('uid')
-    session['role'] = data.get('role') # Crucial for dashboard logic
-    session['user_name'] = data.get('displayName') or "User"
+    session['user_id'] = uid
+    session.pop('role', None)
+    session['user_name'] = data.get('displayName') or decoded.get('name') or data.get('email') or "User"
     return jsonify({"status": "success"})
 
 @app.route('/logout')

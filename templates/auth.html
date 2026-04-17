@@ -109,13 +109,6 @@
                 <input type="password" id="signupPassword" class="form-control-custom" placeholder="Create Password" required>
                 <i class="fa-solid fa-eye toggle-password-btn" onclick="togglePasswordVisibility('signupPassword', this)"></i>
             </div>
-            <div class="mb-3" style="text-align: left; margin-bottom: 15px;">
-            <label class="form-label text-muted" style="font-size: 0.85rem; margin-bottom: 5px; display: block;">I am joining as...</label>
-                <select class="form-control-custom" id="signupRole" style="margin-bottom: 5px;">
-                    <option value="candidate">Candidate (Prepare for Interview)</option>
-                    <option value="hirer">Hirer (Screen Candidates)</option>
-                </select>
-            </div>
             <button type="submit" class="btn-auth">Create Account</button>
         </form>
 
@@ -139,9 +132,11 @@
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
             updateProfile,
-            sendPasswordResetEmail 
+            sendPasswordResetEmail,
+            sendEmailVerification,
+            signOut,
+            reload
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBmzuqvzGqslOqb8tiO2a-Yvysqvgz6LAM",
@@ -154,7 +149,6 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
 
         // --- UI Logic ---
         window.togglePasswordVisibility = function(fieldId, icon) {
@@ -202,18 +196,24 @@
         };
 
         // --- Authentication Actions ---
-        async function syncSessionWithFlask(user, role) {
-            await user.getIdToken();
-            await fetch('/set_session', {
+        async function syncSessionWithFlask(user) {
+            const idToken = await user.getIdToken(true);
+            const response = await fetch('/set_session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     uid: user.uid, 
                     displayName: user.displayName, 
                     email: user.email,
-                    role: role // Added this line
+                    idToken
                 })
             });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || 'Could not create a server session.');
+            }
+
             window.location.href = "/dashboard";
         }
 
@@ -224,7 +224,15 @@
            try {
                await setPersistence(auth, browserSessionPersistence);
                const res = await signInWithEmailAndPassword(auth, email, password);
-               await syncSessionWithFlask(res.user, null);
+               await reload(res.user);
+               // Require email verification before creating a server session
+               if (!res.user.emailVerified) {
+                   try { await sendEmailVerification(res.user); } catch (e) { /* ignore */ }
+                   await signOut(auth);
+                   alert('Please verify your email address before signing in. A verification link has been sent to your email.');
+                   return;
+               }
+               await syncSessionWithFlask(res.user);
            } catch (err) { alert("Login failed: " + err.message); }
         };
 
@@ -233,19 +241,19 @@
             const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value; 
             const password = document.getElementById('signupPassword').value;
-            const role = document.getElementById('signupRole').value; // Get role
             try {
                 await setPersistence(auth, browserSessionPersistence);
                 const res = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(res.user, { displayName: name });
-                // Save role to Firestore for future reference
-                await setDoc(doc(db, "users", res.user.uid), { 
-                    fullName: name, 
-                    email, 
-                    role, // Added role to database
-                    createdAt: new Date() 
-                });
-                await syncSessionWithFlask(res.user, role); // Pass role
+                // Send verification email and do not create a server session until user verifies
+                try {
+                    await sendEmailVerification(res.user);
+                } catch (e) {
+                    console.warn('Failed to send verification email:', e);
+                }
+                await signOut(auth);
+                alert('A verification email has been sent. Please verify your email before signing in.');
+                toggleAuth();
             } catch (err) { alert("Signup Error: " + err.message); }
         };
 

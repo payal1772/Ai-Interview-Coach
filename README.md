@@ -110,6 +110,9 @@ Example:
 ```env
 GOOGLE_API_KEY=your_gemini_api_key
 SECRET_KEY=your_flask_secret_key
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"..."}
+ALLOW_UNVERIFIED_FIREBASE_SESSION=false
+SESSION_COOKIE_SECURE=true
 GEMINI_TIMEOUT_SECONDS=90
 GEMINI_MAX_RETRIES=2
 ```
@@ -118,8 +121,33 @@ GEMINI_MAX_RETRIES=2
 
 - `GOOGLE_API_KEY`: required for Gemini API requests
 - `SECRET_KEY`: Flask session secret
+- `FIREBASE_SERVICE_ACCOUNT_JSON`: Firebase Admin service-account JSON used by Flask to verify login ID tokens and block unverified users
+- `FIREBASE_SERVICE_ACCOUNT`: optional local path to a Firebase service-account JSON file; use this instead of `FIREBASE_SERVICE_ACCOUNT_JSON` for local development if preferred
+- `ALLOW_UNVERIFIED_FIREBASE_SESSION`: set to `false` on Render so users cannot bypass Firebase Admin verification
+- `SESSION_COOKIE_SECURE`: set to `true` on Render so session cookies are sent only over HTTPS
 - `GEMINI_TIMEOUT_SECONDS`: optional request timeout
 - `GEMINI_MAX_RETRIES`: optional retry count for Gemini requests
+
+## Render Deployment Notes
+
+Set these environment variables in Render:
+
+- `GOOGLE_API_KEY`
+- `SECRET_KEY`
+- `FIREBASE_SERVICE_ACCOUNT_JSON`
+- `ALLOW_UNVERIFIED_FIREBASE_SESSION=false`
+- `SESSION_COOKIE_SECURE=true`
+
+To create `FIREBASE_SERVICE_ACCOUNT_JSON`, open Firebase Console, go to Project settings, Service accounts, generate a new private key, then paste the entire JSON content into Render as one environment variable. The app also accepts escaped `\n` characters in the private key.
+
+The production auth flow is:
+
+1. A new user signs up with email and password.
+2. Firebase sends an email verification link.
+3. The app signs the user out immediately after signup.
+4. Login is blocked until Firebase reports `emailVerified=true`.
+5. Flask verifies the fresh Firebase ID token with Firebase Admin.
+6. Verified users are redirected to `/dashboard`, which renders `index.html`.
 
 ## Optional Runtime Support
 
