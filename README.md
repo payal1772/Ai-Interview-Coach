@@ -1,5 +1,3 @@
-https://hireprep-ai-n754.onrender.com
-
 # HirePrep AI
 
 HirePrep AI is a Flask-based interview preparation platform that helps candidates practice for real job interviews using resume-aware AI generation, a guided voice interview, a coding round, and a final performance dashboard.
