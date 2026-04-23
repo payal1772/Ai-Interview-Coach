@@ -20,6 +20,7 @@ The app combines:
 - Lightweight code-quality feedback
 - Combined performance dashboard after the practice flow
 - Firebase-based authentication and Firestore-backed interview history
+- Deployment on Render for hosted access
 
 ## Tech Stack
 
@@ -27,6 +28,7 @@ The app combines:
 - Frontend: HTML, CSS, Vanilla JavaScript, Bootstrap 5, Chart.js
 - AI: Google Gemini
 - Auth and history: Firebase Authentication and Firestore
+- Deployment: Render
 - Browser APIs: Web Speech API for speech synthesis and speech recognition
 
 ## Project Structure
@@ -77,7 +79,7 @@ HirePrep_AI/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/<your-repo>.git
+git clone https://github.com/payal1772/Hireprep_AI.git
 cd HirePrep_AI
 ```
 
