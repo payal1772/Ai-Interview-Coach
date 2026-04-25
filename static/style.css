@@ -227,6 +227,33 @@ textarea::placeholder,
     display: flex;
     flex-direction: column;
     gap: 22px;
+    height: 100vh;
+    min-width: 0;
+    overflow: hidden;
+}
+
+#section-generator,
+#section-voice,
+#section-coding {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.4rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border) transparent;
+}
+
+#section-generator::-webkit-scrollbar,
+#section-voice::-webkit-scrollbar,
+#section-coding::-webkit-scrollbar {
+    width: 6px;
+}
+
+#section-generator::-webkit-scrollbar-thumb,
+#section-voice::-webkit-scrollbar-thumb,
+#section-coding::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 999px;
 }
 
 .top-account-actions {
